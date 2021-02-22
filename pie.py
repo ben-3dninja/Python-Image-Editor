@@ -10,12 +10,14 @@ from copy import copy
 from time import time
 
 
-    
-
 class PIEApplication:
-    """The main class for the Python Image Editor project"""
-    
+    """The main class for the Python Image Editor project."""
+
+
     def __init__(self, path = None):
+        """The application constructor. Takes in argument the path of the
+        default image.
+        """
         self.master = Tk() # The root tkinter Tk object
         self.width = 720 # The minimum window width
         self.height = 500 # The minimum window height
@@ -54,7 +56,7 @@ class PIEApplication:
     
     
     def create_settings(self):
-        
+        """Creates the settings menu."""
         # Defining the settings frame (will contain all the settings)
         settings_frame = Frame(master=self.master)
         settings_frame.grid(row=0, column=1, sticky="E")
@@ -90,10 +92,11 @@ class PIEApplication:
         reset_button.pack(side="bottom", pady=self.pad, expand=True, fill='x')
         
     
-    
     def create_menu(self):
+        """Creates the menu on the top of the window."""
         menubar = Menu(self.master)
         
+        # File menu
         menu_file = Menu(menubar)
         menu_file.add_command(label="Open", command=self.open_image)
         menu_file.add_command(label="Save")
@@ -101,31 +104,33 @@ class PIEApplication:
         menu_file.add_command(label="Exit", command=self.stop)
         menubar.add_cascade(label="File", menu=menu_file)
         
-        
         self.master.config(menu=menubar)
     
     
     def run(self):
+        """Runs the application."""
         self.master.mainloop()
     
     
     def open_image(self):
-        
+        """Triggered when File > Open is pressed. Asks for a path and opens
+        the imagecorresponding image.
+        """    
         file = askopenfile(mode='r',filetypes=[
             ('PNG', '*.png'), ('JPG', '*jpg')])
         self.load_image(file.name)
         
     
-    
     def update_image(self):
+        """Reloads the label with the image attribute."""
         render = ImageTk.PhotoImage(master=self.image_frame, image=self.image)
         self.render = render
         self.imagelabel.configure(image=render)
     
     
     def apply(self):
-        """Applys the modifications to the image using the ImageModifier
-        class from the image_modifier module.
+        """Applies the modifications using the ImageModifier class from
+        image_modifier.py.
         """
         image_modifier = ImageModifier(self.image)
         hsvc = (self.hue.get(), self.sat.get(),
@@ -138,8 +143,8 @@ class PIEApplication:
      
         
     def load_image(self, path):
-        """Loads the image at the given path, copying it to the 'original'
-        attribute for later reset and packing it in the image frame.
+        """Loads the image at the given path, copies it in the 'original'
+        attribute and packs it in the image frame.
         """
         
         self.original = Image.open(path)
@@ -151,8 +156,9 @@ class PIEApplication:
         self.render = render
         self.imagelabel.configure(image=render)
     
+
     def reset(self):
-        """Resets the settings sliders and the image"""
+        """Resets the settings sliders and the displayed image."""
         self.image = copy(self.original)
         self.update_image()
         self.hue.set(0)
@@ -164,9 +170,9 @@ class PIEApplication:
     
     
     def stop(self):
+        """Stops the application."""
         self.master.quit()
 
 
 app = PIEApplication("galaxy.jpg")
 app.run()
-    
