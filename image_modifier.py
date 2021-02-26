@@ -91,9 +91,49 @@ class ImageModifier:
         
         # Black and white is handled first
         if bw == 1:
+            # Defining a medium value that will be applied to all 3 RGB
+            # components, taking in account human's color perception
             value = int(0.64*out[0]+0.32*out[1]+0.02*out[2])
             out = [value, value, value]
         
+        # Then hue
+        if hue != 0:
+            # Defining the hue ratio, that will be useful when determining
+            # the proportion of each RGB component
+            hue = hue / 100
+
+            # Defining the proportion of each component depending on
+            # the hue ratio. (the proportion will be multiplied to
+            # the pixel's component value)
+            if hue < 1/6:
+                red = 1
+                green = hue / (1/6)
+                blue = 0
+            elif hue < 1/3:
+                red = 1 - ((hue - (1/6)) / (1/6))
+                green = 1
+                blue = 0
+            elif hue < 1/2:
+                red = 0
+                green = 1
+                blue = (hue - (1/3)) / (1/6)
+            elif hue < 2/3:
+                red = 0
+                green = 1 - ((hue - (1/2)) / (1/6))
+                blue = 1
+            elif hue < 5/6:
+                red = (hue - (2/3)) / (1/6)
+                green = 0
+                blue = 1
+            elif hue <= 1:
+                red = 1
+                green = 0
+                blue = 1 - ((hue - (5/6)) / (1/6))
+
+            # Multiplying each component with its corresponding ratio
+            rgb = [red, green, blue]
+            out = [out[i]*rgb[i] for i in range(0, 3)]
+
         # Then value
         if val != 0:
             fact = val/100+1
