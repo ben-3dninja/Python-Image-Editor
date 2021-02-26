@@ -5,7 +5,7 @@ from tkinter import Scale, IntVar, Checkbutton
 
 class PercentSlider(Scale, IntVar):
     """A PercentSlider object is a tkinter Scale coupled with an IntVar,
-    ready to deal easily with percentage values,such as brightess or
+    ready to deal easily with percentage values, such as brightess or
     contrast.
     """
     
@@ -23,7 +23,10 @@ class PercentSlider(Scale, IntVar):
 
 
 class Checkbox(Checkbutton, IntVar):
-        
+    """A Checkbox object is a tkinter Checkbutton coupled with an Intvar.
+    The value is either 1 or 0, checked or unchecked.
+    """
+    
     
     def __init__(self, master, text: str, default: int=0):
         self.text = text
