@@ -174,5 +174,5 @@ class PIEApplication:
         self.master.quit()
 
 
-app = PIEApplication("galaxy.jpg")
+app = PIEApplication()
 app.run()
