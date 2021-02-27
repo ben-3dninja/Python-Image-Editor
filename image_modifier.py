@@ -18,6 +18,8 @@ class ImageModifier:
         that is processed by a single thread)
         - The number of tiles vertically.
         """
+        if image.mode != "RGB" and image.mode != "RGBA":
+            image = image.convert("RGB")
         self.image = image
         self.tiles_x = tiles_x
         self.tiles_y = tiles_y
@@ -40,17 +42,27 @@ class ImageModifier:
         
         # Setting the tile height and width
         size_x = int(width/tiles_x)
+        last_x = width % tiles_x # Last tile size
         size_y = int(height/tiles_y)
+        last_y = height % tiles_y # Last tile size
         
         threads = []
         
         # Processing each tile using threading
-        for t_y in range(tiles_y):
-            for t_x in range(tiles_x):
+
+        # Here each loop is added 1 iteration if there is a last
+        # uncompleted tile
+        for t_y in range(tiles_y+int(last_y != 0)):
+            for t_x in range(tiles_x+1+int(last_x != 0)):
                 x1 = t_x*size_x
                 y1 = t_y*size_y
                 x2 = ((t_x+1)*size_x)
                 y2 = ((t_y+1)*size_y)
+                # Adding the last tile if there is one
+                if t_x == tiles_x:
+                    x2 = (t_x*size_x)+last_x
+                if t_y == tiles_y:
+                    y2 = (t_y*size_y)+last_y
                 t = threading.Thread(target=lambda:self.modify_tile(x1, y1,
                                                                     x2, y2,
                                                                     hsvc, bw))
@@ -100,39 +112,51 @@ class ImageModifier:
         if hue != 0:
             # Defining the hue ratio, that will be useful when determining
             # the proportion of each RGB component
-            hue = hue / 100
+            huer = hue / 100
 
             # Defining the proportion of each component depending on
             # the hue ratio. (the proportion will be multiplied to
             # the pixel's component value)
-            if hue < 1/6:
-                red = 1
-                green = hue / (1/6)
-                blue = 0
-            elif hue < 1/3:
-                red = 1 - ((hue - (1/6)) / (1/6))
-                green = 1
-                blue = 0
-            elif hue < 1/2:
-                red = 0
-                green = 1
-                blue = (hue - (1/3)) / (1/6)
-            elif hue < 2/3:
-                red = 0
-                green = 1 - ((hue - (1/2)) / (1/6))
-                blue = 1
-            elif hue < 5/6:
-                red = (hue - (2/3)) / (1/6)
-                green = 0
-                blue = 1
-            elif hue <= 1:
-                red = 1
-                green = 0
-                blue = 1 - ((hue - (5/6)) / (1/6))
+            if huer < 1/6:
+                redr = 1
+                greenr = hue / (1/6)
+                bluer = 0
+            elif huer < 1/3:
+                redr = 1 - ((hue - (1/6)) / (1/6))
+                greenr = 1
+                bluer = 0
+            elif huer < 1/2:
+                redr = 0
+                greenr = 1
+                bluer = (hue - (1/3)) / (1/6)
+            elif huer < 2/3:
+                redr = 0
+                greenr = 1 - ((hue - (1/2)) / (1/6))
+                bluer = 1
+            elif huer < 5/6:
+                redr = (hue - (2/3)) / (1/6)
+                greenr = 0
+                bluer = 1
+            elif huer <= 1:
+                redr = 1
+                greenr = 0
+                bluer = 1 - ((hue - (5/6)) / (1/6))
 
-            # Multiplying each component with its corresponding ratio
-            rgb = [red, green, blue]
-            out = [out[i]*rgb[i] for i in range(0, 3)]
+            # Multiplying each component with its corresponding ratio and
+            # adding compensation to shift
+            rgb = [redr, greenr, bluer]
+            out = [int(out[i]*rgb[i]) for i in range(0, 3)]
+        
+        # Then saturation
+        if sat != 0:
+            fact = sat/100
+            average = (out[0]+out[1]+out[3])/3
+            red = out[0]+(out[0]-average)*fact
+            green = out[1]+(out[1]-average)*fact
+            blue = out[2]+(out[2]-average)*fact
+
+            out = [int(e) for e in [red, green, blue]]
+
 
         # Then value
         if val != 0:

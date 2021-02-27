@@ -138,7 +138,6 @@ class PIEApplication:
         begin_time = time()
         image_modifier.modify_image(hsvc, self.bw.get())
         end_time = time()
-        print(end_time-begin_time)
         self.update_image()
      
         
