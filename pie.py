@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from tkinter import Tk, Frame, LabelFrame, Label, Menu, Grid, Button
+from tkinter import DISABLED, NORMAL
 from tkinter.font import Font
 from tkinter.filedialog import askopenfile
 from PIL import Image, ImageTk
@@ -94,18 +95,46 @@ class PIEApplication:
     
     def create_menu(self):
         """Creates the menu on the top of the window."""
-        menubar = Menu(self.master)
+        self.menubar = Menu(self.master)
+
+        # Creating the menus
+        self.menu_file = Menu(self.menubar)
+        self.menu_edit = Menu(self.menubar)
+
+        # Adding them to the menu bar
+        self.menubar.add_cascade(label="File", menu=self.menu_file)
+        self.menubar.add_cascade(label="Edit", menu=self.menu_edit)
         
+        # Adding the elements
+
         # File menu
-        menu_file = Menu(menubar)
-        menu_file.add_command(label="Open", command=self.open_image)
-        menu_file.add_command(label="Save")
-        menu_file.add_separator()
-        menu_file.add_command(label="Exit", command=self.stop)
-        menubar.add_cascade(label="File", menu=menu_file)
+        self.menu_file.add_command(label="Open", command=self.open_image)
+        self.menu_file.add_command(label="Save")
+        self.menu_file.add_separator()
+        self.menu_file.add_command(label="Exit", command=self.stop)
+
+        # Edit menu
+        self.menu_edit.add_command(label="Undo", command=self.undo, state=DISABLED)
+        self.undo_image = None
+        self.menu_edit.add_command(label="Redo", command=self.redo, state=DISABLED)
+        self.redo_image = None
         
-        self.master.config(menu=menubar)
+        # Adding the menu to the master
+        self.master.config(menu=self.menubar)
     
+
+    def update_menu(self):
+        """Updates the menu on the top of the window, to gray out
+        some possibilities for example."""
+        if self.undo_image == None:
+            self.menu_edit.entryconfig("Undo", state=DISABLED)
+        else:
+            self.menu_edit.entryconfig("Undo", state=NORMAL)
+        if self.redo_image == None:
+            self.menu_edit.entryconfig("Redo", state=DISABLED)
+        else:
+            self.menu_edit.entryconfig("Redo", state=NORMAL)
+
     
     def run(self):
         """Runs the application."""
@@ -115,29 +144,48 @@ class PIEApplication:
     def open_image(self):
         """Triggered when File > Open is pressed. Asks for a path and opens
         the imagecorresponding image.
-        """    
+        """
         file = askopenfile(mode='r',filetypes=[
             ('PNG', '*.png'), ('JPG', '*jpg')])
-        self.load_image(file.name)
-        
+        if file != None:
+            self.load_image(file.name)
+    
+    
+    def undo(self):
+        """Undoes last change."""
+        self.redo_image = copy(self.image)
+        self.image = copy(self.undo_image)
+        self.update_image()
+        self.undo_image = None
+        self.update_menu()
+
+
+    def redo(self):
+        """Redoes last change."""
+        self.undo_image = copy(self.image)
+        self.image = copy(self.redo_image)
+        self.update_image()
+        self.redo_image = None
+        self.update_menu()
+
     
     def update_image(self):
         """Reloads the label with the image attribute."""
         render = ImageTk.PhotoImage(master=self.image_frame, image=self.image)
         self.render = render
         self.imagelabel.configure(image=render)
+        self.update_menu()
     
     
     def apply(self):
         """Applies the modifications using the ImageModifier class from
         image_modifier.py.
         """
+        self.undo_image = copy(self.image)
         image_modifier = ImageModifier(self.image)
         hsvc = (self.hue.get(), self.sat.get(),
                 self.val.get(), self.cont.get())
-        begin_time = time()
         image_modifier.modify_image(hsvc, self.bw.get())
-        end_time = time()
         self.update_image()
      
         
@@ -150,14 +198,18 @@ class PIEApplication:
         if self.image == None:
             self.imagelabel = Label(master=self.image_frame)
             self.imagelabel.pack(side="top", padx=self.pad, pady=self.pad)
+        self.undo_image = copy(self.image)
+        self.redo_image = copy(self.image)
         self.image = copy(self.original)
         render = ImageTk.PhotoImage(master=self.image_frame, image=self.image)
         self.render = render
         self.imagelabel.configure(image=render)
+        self.update_menu()
     
 
     def reset(self):
         """Resets the settings sliders and the displayed image."""
+        self.undo_image = copy(self.image)
         self.image = copy(self.original)
         self.update_image()
         self.hue.set(0)
@@ -166,7 +218,6 @@ class PIEApplication:
         self.cont.set(0)
         self.bw.set(0)
         
-    
     
     def stop(self):
         """Stops the application."""

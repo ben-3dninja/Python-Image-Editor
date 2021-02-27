@@ -42,9 +42,9 @@ class ImageModifier:
         
         # Setting the tile height and width
         size_x = int(width/tiles_x)
-        last_x = width % tiles_x # Last tile size
+        last_x = width % size_x # Last tile size
         size_y = int(height/tiles_y)
-        last_y = height % tiles_y # Last tile size
+        last_y = height % size_y # Last tile size
         
         threads = []
         
@@ -53,7 +53,7 @@ class ImageModifier:
         # Here each loop is added 1 iteration if there is a last
         # uncompleted tile
         for t_y in range(tiles_y+int(last_y != 0)):
-            for t_x in range(tiles_x+1+int(last_x != 0)):
+            for t_x in range(tiles_x+int(last_x != 0)):
                 x1 = t_x*size_x
                 y1 = t_y*size_y
                 x2 = ((t_x+1)*size_x)
